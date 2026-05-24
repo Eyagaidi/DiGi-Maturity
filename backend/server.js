@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
@@ -35,7 +35,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // 1. Configuration CORS
 app.use(cors({
-    origin: 'http://localhost:3000',
+   origin: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -43,24 +43,25 @@ app.use(cors({
 
 // ✅ 3. Middleware de vérification du Token (Version Corrigée)
 const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; 
-    
-    if (!token) return res.status(403).json({ Error: "Token manquant" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(403).json({ Error: "Token manquant" });
+    }
+    const parts = authHeader.split(" ");
 
+    if (parts.length !== 2) {
+        return res.status(403).json({ Error: "Format token invalide" });
+    }
+    const token = parts[1];
     jwt.verify(token, SECRET_KEY, (err, decoded) => {
         if (err) {
-            console.log("JWT Error:", err.message); // Bechi i-warrik ken el Token expired wala ghalet
+            console.log("JWT Error:", err.message);
             return res.status(401).json({ Error: "Token invalide" });
         }
-        
-        // ⚠️ HNA EL TASLI7: Lezem testa3mel "id" (kima fil login sign)
-        req.userId = decoded.id; 
-        console.log("Utilisateur ID vérifié:", req.userId); // Zid hedhi bech n-thabtou dima fil console
+        req.userId = decoded.id;
         next();
     });
 };
-
 // ✅ Zid hethi bech n-riglou el 404
 app.get('/me', verifyToken, (req, res) => {
     const sql = "SELECT * FROM utilisateur WHERE Id = ?";
@@ -71,15 +72,14 @@ app.get('/me', verifyToken, (req, res) => {
     });
 });
 // 2. Connexion à la base de données
-const db = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "digimaturity",
-    connectionLimit: 10,
-    acquireTimeout: 30000,
-    timeout: 60000
-});
+const db = mysql.createPool({ 
+    host:"127.0.0.1",
+user: "root",
+password: "",
+database: "digimaturity",
+        connectionLimit: 10,
+         acquireTimeout: 30000, 
+         timeout: 60000 });
 
 db.getConnection((err, connection) => {
     if (err) {
@@ -1243,9 +1243,9 @@ app.post('/api/admin/users/add', (req, res) => {
         });
     });
 });
-//---------------------------------------------------------
+//==============================================
 //Gestions de Questions
-//---------------------------------------------------------
+//==============================================
 //kifeh  jebna mil base :
 
 // 1. GET toutes les questions

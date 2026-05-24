@@ -1,7 +1,7 @@
 const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
-  host: 'localhost',
+ host: 'db',
   user: 'root',      // Par défaut f'XAMPP
   password: '',      // Par défaut f'XAMPP fergha
   database: 'digimaturity' // Esm el base elli fil taswira mte3ek
